@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Connect other devices</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .qr-card { display:flex; gap:18px; align-items:center; flex-wrap:wrap;
+                   border:1px solid #dbe3f0; border-radius:10px; padding:14px; margin-bottom:14px; background:#fff; }
+        .qr-card svg { width:180px; height:180px; flex-shrink:0; border:1px solid #e2e8f0; border-radius:6px; }
+        .qr-url { font-size:18px; font-weight:bold; word-break:break-all; }
+        .tips li { margin-bottom:6px; font-size:14px; color:#444; }
+    </style>
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+<div class="container" style="margin-top:60px;">
+    <h2>Open this app on another device</h2>
+    <p>Point your phone's camera at a QR code below, or type the address into any browser.</p>
+
+    <div class="qr-card" th:each="e : ${entries}">
+        <div th:utext="${e.qrSvg}"></div>
+        <div>
+            <div class="qr-url"><a th:href="${e.url}" th:text="${e.url}"></a></div>
+            <div class="hint">Network: <span th:text="${e.label}"></span></div>
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(entries)}" class="error">
+        No network connection found on this laptop. Connect to Wi-Fi, Ethernet or a hotspot, then refresh this page.
+    </p>
+
+    <h4>If it doesn't open</h4>
+    <ul class="tips">
+        <li>The phone and this laptop must be on the <strong>same network</strong>. Laptop on Ethernet and phone on Wi-Fi are often different networks.</li>
+        <li>Easy fix: put the laptop and phone on the <strong>same Wi-Fi or hotspot</strong>. If there are several QR codes, try each one.</li>
+        <li>Make sure the address starts with <strong>http://</strong>, not https://.</li>
+        <li>Windows may ask to allow Java through the firewall. Choose <strong>Private networks</strong>.</li>
+    </ul>
+
+    <p><a th:href="@{/login}">Back to login</a></p>
+</div>
+</body>
+</html>

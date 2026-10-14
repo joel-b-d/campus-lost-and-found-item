@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Users</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+<nav>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/match}">Matching Portal</a>
+    <a th:href="@{/notifications}">Notifications</a>
+    <a th:href="@{/logout}" style="float:right;">Logout</a>
+</nav>
+
+<div class="container">
+    <h2>Manage Users (Admin Only)</h2>
+
+    <h3>Create Staff or Admin Account</h3>
+    <form th:action="@{/admin/users/new}" method="post">
+        <label>Full Name</label>
+        <input type="text" name="fullName" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <label>Role</label>
+        <select name="role">
+            <option value="STAFF">STAFF</option>
+            <option value="ADMIN">ADMIN</option>
+        </select>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+    <h3 style="margin-top:30px;">All Accounts</h3>
+    <table>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+        <tr th:each="u : ${users}">
+            <td th:text="${u.fullName}"></td>
+            <td th:text="${u.email}"></td>
+            <td th:text="${u.role}"></td>
+            <td th:text="${u.enabled} ? 'Active' : 'Disabled'"></td>
+            <td>
+                <form th:if="${u.enabled}" th:action="@{/admin/users/{id}/disable(id=${u.id})}" method="post">
+                    <button type="submit">Disable</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

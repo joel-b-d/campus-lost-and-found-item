@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Matching Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+<nav>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/report-lost}" th:if="${user.role.name() == 'STUDENT'}">Report Lost</a>
+    <a th:href="@{/report-found}" th:if="${user.role.name() != 'ADMIN'}">Report Found</a>
+    <a th:href="@{/notifications}">Notifications</a>
+    <a th:href="@{/admin/users}" th:if="${user.role.name() == 'ADMIN'}">Manage Users</a>
+    <a th:href="@{/logout}" style="float:right;">Logout</a>
+</nav>
+
+<!-- ============ STAFF / ADMIN VIEW ============ -->
+<div class="container wide" th:if="${user.role.name() == 'STAFF' or user.role.name() == 'ADMIN'}">
+    <h2>Matching Portal</h2>
+    <p class="hint">
+        Each card is an open lost report. On the right, the app has already ranked every open found item by
+        how similar it looks: mainly the title, description and location words (TF-IDF + cosine similarity),
+        plus a small bonus when both items have photos with similar colours.
+        Pick the right one, add pickup details, and confirm. A found item can be offered to more than one student
+        until its real owner confirms.
+    </p>
+
+    <p th:if="${#lists.isEmpty(suggestions)}" class="empty">No open lost items right now. 🎉</p>
+
+    <div class="match-card" th:each="s : ${suggestions}">
+
+        <!-- LEFT: the lost item -->
+        <div class="match-left">
+            <span class="tag tag-lost">LOST</span>
+            <img th:if="${s.lostItem.imageFileName}" th:src="@{'/uploads/' + ${s.lostItem.imageFileName}}" class="match-photo" alt="">
+            <div th:unless="${s.lostItem.imageFileName}" class="match-photo no-photo">No photo</div>
+            <h3 th:text="${s.lostItem.title}"></h3>
+            <p th:text="${s.lostItem.description}"></p>
+            <p class="meta">📍 <span th:text="${s.lostItem.location}"></span></p>
+            <p class="meta">👤 <span th:text="${s.lostItem.postedBy.fullName}"></span></p>
+            <p class="meta">🕒 <span th:text="${#temporals.format(s.lostItem.createdAt, 'dd MMM yyyy, HH:mm')}"></span></p>
+        </div>
+
+        <!-- RIGHT: ranked found items + confirm form -->
+        <form class="match-right" th:action="@{/match/create}" method="post">
+            <input type="hidden" name="lostItemId" th:value="${s.lostItem.id}">
+
+            <h4>Possible found items <span class="hint">(best match first)</span></h4>
+
+            <p th:if="${#lists.isEmpty(s.candidates)}" class="empty">No open found items to compare against yet.</p>
+
+            <div class="cand-list">
+                <label class="cand" th:each="c, cStat : ${s.candidates}">
+                    <input type="radio" name="foundItemId" th:value="${c.item.id}" required
+                           th:checked="${cStat.first and c.percent > 0}">
+                    <div class="cand-body">
+                        <img th:if="${c.item.imageFileName}" th:src="@{'/uploads/' + ${c.item.imageFileName}}" class="cand-photo" alt="">
+                        <div th:unless="${c.item.imageFileName}" class="cand-photo no-photo">No photo</div>
+                        <div class="cand-text">
+                            <div class="cand-title">
+                                <strong th:text="${c.item.title}"></strong>
+                                <span class="best" th:if="${cStat.first and c.percent > 0}">Best match</span>
+                            </div>
+                            <div class="cand-desc" th:text="${c.item.description}"></div>
+                            <div class="meta">📍 <span th:text="${c.item.location}"></span>
+                                · 👤 <span th:text="${c.item.postedBy.fullName}"></span>
+                                · <span th:text="${#temporals.format(c.item.createdAt, 'dd MMM, HH:mm')}"></span></div>
+                            <div class="score">
+                                <div class="bar"><span th:style="'width:' + ${c.percent} + '%'"></span></div>
+                                <small><span th:text="${c.percent}"></span>% similar</small>
+                            </div>
+                            <div class="parts">
+                                Text <span th:text="${c.textPercent}"></span>%
+                                <span th:if="${c.imagePercent != null}">
+                                    · Photo colour <span th:text="${c.imagePercent}"></span>%
+                                </span>
+                                <span th:if="${c.imagePercent == null}"> · no photo to compare</span>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(s.candidates)}">
+                <label>Pickup info (where/when should the student collect it?)</label>
+                <input type="text" name="pickupInfo" placeholder="e.g. Front desk, Mon-Fri 9am-4pm" required>
+                <button type="submit">Confirm Match</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ STUDENT VIEW ============ -->
+<div class="container" th:if="${user.role.name() == 'STUDENT'}">
+    <h2>Matching Portal</h2>
+    <p>Your reported items and their match status:</p>
+
+    <div class="item-box" th:each="item : ${myItems}">
+        <img th:if="${item.imageFileName}" th:src="@{'/uploads/' + ${item.imageFileName}}"
+             style="max-width:120px;max-height:120px;display:block;margin-bottom:8px;border-radius:6px;">
+        <strong th:text="${item.title}"></strong>
+        (<span th:text="${item.type}"></span>)
+        — Status: <span th:text="${item.status}"></span>
+
+        <!-- Matched but not yet confirmed: pickup info + two buttons -->
+        <div th:if="${item.status.name() == 'MATCHED'}" style="margin-top:8px;color:#166534;">
+            ✅ Matched! Pickup info: <span th:text="${item.pickupInfo}"></span>
+
+            <div class="btn-row">
+                <form th:action="@{/match/{id}/confirm(id=${item.id})}" method="post">
+                    <button type="submit">I got my item</button>
+                </form>
+                <form th:action="@{/match/{id}/reject(id=${item.id})}" method="post"
+                      onsubmit="return confirm('This will cancel your report and you will need to submit a new one. Continue?');">
+                    <button type="submit" class="btn-danger">I didn't get my item</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cancelled: tell them to reapply -->
+        <div th:if="${item.status.name() == 'CANCELLED'}" style="margin-top:8px;color:#b91c1c;">
+            ❌ This report was cancelled because the match wasn't your item.
+            <a th:href="@{/report-lost}" th:if="${item.type.name() == 'LOST'}">Submit a new lost report</a>
+            with more detail (colour, brand, marks, a photo) so we can match it better.
+        </div>
+
+        <!-- Already confirmed collected -->
+        <div th:if="${item.status.name() == 'COLLECTED'}" style="margin-top:8px;color:#555;">
+            📦 Collected — this report is closed.
+        </div>
+    </div>
+
+    <p th:if="${#lists.isEmpty(myItems)}">You haven't reported any items yet.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Notifications</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+<nav>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/match}">Matching Portal</a>
+    <a th:href="@{/logout}" style="float:right;">Logout</a>
+</nav>
+
+<div class="container">
+    <h2>Notifications</h2>
+
+    <div class="item-box" th:each="note : ${notifications}">
+        <p th:text="${note.message}"></p>
+        <small th:text="${note.createdAt}" style="color:#888;"></small>
+    </div>
+
+    <p th:if="${#lists.isEmpty(notifications)}">No notifications yet.</p>
+</div>
+</body>
+</html>

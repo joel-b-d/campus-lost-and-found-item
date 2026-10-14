@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+
+<!-- Same nav repeated on every page — nothing hidden in an "include" file -->
+<nav>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/report-lost}" th:if="${user.role.name() == 'STUDENT'}">Report Lost</a>
+    <a th:href="@{/report-found}" th:if="${user.role.name() != 'ADMIN'}">Report Found</a>
+    <a th:href="@{/match}">Matching Portal</a>
+    <a th:href="@{/notifications}">Notifications</a>
+    <a th:href="@{/admin/users}" th:if="${user.role.name() == 'ADMIN'}">Manage Users</a>
+    <a th:href="@{/logout}" style="float:right;">Logout</a>
+</nav>
+
+<div class="container">
+    <h2>All Lost Items</h2>
+    <p>Logged in as: <span th:text="${user.fullName}"></span> (<span th:text="${user.role}"></span>)</p>
+
+    <div class="item-box" th:each="item : ${items}">
+        <img th:if="${item.imageFileName}" th:src="@{'/uploads/' + ${item.imageFileName}}"
+             style="max-width:150px;max-height:150px;display:block;margin-bottom:8px;border-radius:6px;">
+        <strong th:text="${item.title}"></strong>
+        <p th:text="${item.description}"></p>
+        <p>Last seen: <span th:text="${item.location}"></span></p>
+    </div>
+
+    <p th:if="${#lists.isEmpty(items)}">No lost items reported right now.</p>
+</div>
+
+</body>
+</html>

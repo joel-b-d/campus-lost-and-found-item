@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Report Found Item</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="bg-carousel">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+</div>
+
+<nav>
+    <a th:href="@{/dashboard}">Dashboard</a>
+    <a th:href="@{/match}">Matching Portal</a>
+    <a th:href="@{/notifications}">Notifications</a>
+    <a th:href="@{/logout}" style="float:right;">Logout</a>
+</nav>
+
+<div class="container">
+    <h2>Report a Found Item</h2>
+
+    <form th:action="@{/report-found}" method="post" enctype="multipart/form-data">
+        <label>Item Name</label>
+        <input type="text" name="title" required>
+
+        <label>Description</label>
+        <textarea name="description" rows="3"></textarea>
+
+        <label>Found Location</label>
+        <input type="text" name="location">
+
+        <label>Photo (optional)</label>
+        <input type="file" name="photo" accept="image/*">
+
+        <button type="submit">Submit</button>
+    </form>
+</div>
+</body>
+</html>
